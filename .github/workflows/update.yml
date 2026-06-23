@@ -57,23 +57,21 @@ jobs:
       - name: 运行构建脚本（下载源 -> 转换 -> 去重合并 -> 输出 dist/）
         run: python3 scripts/build.py
 
-      - name: 检查是否有实际变化
-        id: check_diff
-        run: |
-          if git diff --quiet -- dist/; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: 提交变更（仅当 dist/ 有实际差异时）
-        if: steps.check_diff.outputs.changed == 'true'
+      - name: 提交并推送 dist/（无条件提交，不依赖"是否有变化"的判断）
         run: |
           git config user.name "router-rules-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add dist/
-          git commit -m "chore: 自动更新规则 ($(date -u '+%Y-%m-%d %H:%M UTC'))"
-          git push
+          git add -A dist/
+          # 不再用 git diff/status 判断"是否有变化"再决定是否提交——
+          # 这种判断在"本地覆盖 push 时没有先清空旧 dist/ 内容"的场景下
+          # 会被误判为"无变化"而静默跳过提交，这正是此前 dist/ 看起来
+          # 一直是空的真正原因（根因在仓库覆盖操作的本地文件残留，
+          # 不在这个 workflow 本身，但我们让 workflow 不再被这种情况坑到）。
+          # --allow-empty-message 配合下面的判断：如果真的没有任何
+          # staged 改动，commit 会报错退出，用 || true 吞掉这种情况，
+          # 不让 workflow 因此显示失败。
+          git commit -m "chore: 自动更新规则 ($(date -u '+%Y-%m-%d %H:%M UTC'))" || echo "没有新的改动需要提交（dist/ 内容与上次完全相同）"
+          git push || echo "没有新提交需要推送"
 
       - name: 上传构建报告（即使没有 git 变更也保留，方便排查失败源）
         uses: actions/upload-artifact@v7
