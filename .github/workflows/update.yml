@@ -1,0 +1,83 @@
+name: 每日自动聚合规则
+
+# ============================================================================
+# 每天定时触发，下载 sources.yaml 中列出的所有公开规则源，合并去重后
+# 提交到 dist/ 目录。也支持手动触发（workflow_dispatch）方便临时强制刷新。
+#
+# 本仓库不包含任何敏感信息（Clash 订阅链接、external-controller secret 等）。
+# 这些信息留在你自己路由器本地的配置文件里，不会出现在这里。
+# ============================================================================
+
+on:
+  schedule:
+    # 每天 UTC 03:00（北京时间 11:00）跑一次。
+    # cron 用的是 UTC 时间，按需调整。
+    - cron: "0 3 * * *"
+  workflow_dispatch: {}  # 允许在 GitHub 网页上手动点击运行
+
+permissions:
+  contents: write  # 需要写权限才能把 dist/ 的更新提交回仓库
+
+concurrency:
+  group: router-rules-build
+  cancel-in-progress: false  # 避免和上一次还没跑完的任务冲突
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: 拉取仓库代码
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: 安装 Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: 安装 Python 依赖
+        run: pip install pyyaml
+
+      - name: 安装 mihomo 二进制（用于手写域名 文本->mrs 单向转换；.mrs源采用原样镜像，不依赖此步骤）
+        run: |
+          set -e
+          LATEST_TAG=$(curl -fsSL https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | python3 -c "import sys,json; print(json.load(sys.stdin)['tag_name'])")
+          VERSION="${LATEST_TAG#v}"
+          URL="https://github.com/MetaCubeX/mihomo/releases/download/${LATEST_TAG}/mihomo-linux-amd64-compatible-${LATEST_TAG}.gz"
+          echo "下载 mihomo ${LATEST_TAG} -> ${URL}"
+          curl -fsSL -o mihomo.gz "${URL}"
+          gzip -d mihomo.gz
+          chmod +x mihomo
+          sudo mv mihomo /usr/local/bin/mihomo
+          mihomo -v
+
+      - name: 运行构建脚本（下载源 -> 转换 -> 去重合并 -> 输出 dist/）
+        run: python3 scripts/build.py
+
+      - name: 检查是否有实际变化
+        id: check_diff
+        run: |
+          if git diff --quiet -- dist/; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 提交变更（仅当 dist/ 有实际差异时）
+        if: steps.check_diff.outputs.changed == 'true'
+        run: |
+          git config user.name "router-rules-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add dist/
+          git commit -m "chore: 自动更新规则 ($(date -u '+%Y-%m-%d %H:%M UTC'))"
+          git push
+
+      - name: 上传构建报告（即使没有 git 变更也保留，方便排查失败源）
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-report
+          path: dist/_build_report.json
+          retention-days: 14

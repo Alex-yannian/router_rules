@@ -1,0 +1,318 @@
+# sources.yaml
+# ============================================================================
+# 本文件是整套"每日自动聚合规则"系统的唯一清单（人类维护的真相来源）。
+# GitHub Action 每天读取本文件，按下面定义的 fetch 列表逐个下载，
+# 合并、去重后生成 dist/ 目录下的成品规则文件。
+#
+# 不含任何敏感信息（订阅链接、secret 等），可以安全公开。
+#
+# 已知风险提示（人工判断，脚本不做任何法律判断）：
+#   666OS/rules 仓库的 README 声明禁止转载发布到中国大陆境内的公共平台。
+#   本仓库使用 GitHub Actions 每日拉取其内容并存入本仓库的 dist/ 目录，
+#   这是否落入该条款的限制范围没有明确结论，使用者需自行判断风险。
+# ============================================================================
+
+# 每个 category 对应最终生成一个 dist/<category>.txt（classical格式，
+# 内含 DOMAIN-SUFFIX / DOMAIN-KEYWORD / IP-CIDR 等明文规则，多源去重合并）
+categories:
+
+  # -------------------- 安全基础 --------------------
+  ads:
+    description: "广告与追踪域名拦截"
+    fetch:
+      - name: metacubex_ads
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ads-all.mrs
+        format: mrs
+      - name: awavenue_ads
+        url: https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash.yaml
+        format: clash_classical_yaml
+
+  # -------------------- 局域网 / 国内基础 --------------------
+  private:
+    description: "局域网与私有地址，必须直连"
+    fetch:
+      - name: metacubex_private_domain
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs
+        format: mrs
+
+  private_ip:
+    description: "局域网与私有 IP 段"
+    fetch:
+      - name: metacubex_private_ip
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/private.mrs
+        format: mrs
+
+  cn_domain:
+    description: "中国大陆通用域名，直连"
+    fetch:
+      - name: metacubex_cn_domain
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs
+        format: mrs
+
+  cn_ip:
+    description: "中国大陆 IP 段，直连"
+    fetch:
+      - name: metacubex_cn_ip
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs
+        format: mrs
+
+  geolocation_not_cn:
+    description: "非中国大陆地理位置域名，兜底代理"
+    fetch:
+      - name: metacubex_not_cn
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.mrs
+        format: mrs
+
+  # -------------------- 双线域名（大陆/海外分离，必须保持优先级）--------------------
+  bilibili_cn:
+    description: "B站大陆版，直连"
+    fetch:
+      - name: metacubex_bilibili
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/bilibili.mrs
+        format: mrs
+
+  bilibili_intl:
+    description: "B站国际版/港澳台番剧，必须代理"
+    fetch:
+      - name: metacubex_bilibili_intl
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/biliintl.mrs
+        format: mrs
+
+  apple_cn:
+    description: "苹果中国区服务，直连"
+    fetch:
+      - name: metacubex_apple_cn
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple-cn.mrs
+        format: mrs
+      - name: 666os_apple_cn
+        url: https://github.com/666OS/rules/raw/release/mihomo/domain/AppleCN.mrs
+        format: mrs
+        risk: "666OS/rules 限制条款，详见文件头说明"
+
+  apple_global:
+    description: "苹果全球服务"
+    fetch:
+      - name: metacubex_apple
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.mrs
+        format: mrs
+
+  microsoft_cn:
+    description: "微软中国区服务，直连"
+    fetch:
+      - name: metacubex_microsoft_cn
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft@cn.mrs
+        format: mrs
+
+  microsoft_global:
+    description: "微软全球服务"
+    fetch:
+      - name: metacubex_microsoft
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.mrs
+        format: mrs
+
+  # -------------------- AI 服务 --------------------
+  ai_services:
+    description: "OpenAI / ChatGPT / Claude / Gemini 等 AI 服务"
+    fetch:
+      - name: metacubex_openai
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.mrs
+        format: mrs
+      - name: 666os_ai
+        url: https://github.com/666OS/rules/raw/release/mihomo/domain/AI.mrs
+        format: mrs
+        risk: "666OS/rules 限制条款，详见文件头说明"
+    extra_domains:
+      - openai.com
+      - chatgpt.com
+      - chat.com
+      - ai.com
+      - sora.com
+      - oaistatic.com
+      - oaiusercontent.com
+      - oaistatsig.com
+      - chatgpt.livekit.cloud
+      - host.livekit.cloud
+      - turn.livekit.cloud
+      - claude.ai
+      - anthropic.com
+      - gemini.google.com
+      - makersuite.google.com
+      - bard.google.com
+      - arkoselabs.com
+      - intercom.io
+      - intercomcdn.com
+      - sentry.io
+      - browser-intake-datadoghq.com
+
+  # -------------------- 国外网页 / 社交 / 媒体 --------------------
+  google:
+    description: "谷歌服务"
+    fetch:
+      - name: metacubex_google
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs
+        format: mrs
+
+  youtube:
+    description: "YouTube"
+    fetch:
+      - name: metacubex_youtube
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.mrs
+        format: mrs
+
+  telegram:
+    description: "Telegram"
+    fetch:
+      - name: metacubex_telegram
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs
+        format: mrs
+
+  twitter:
+    description: "Twitter / X"
+    fetch:
+      - name: 666os_twitter
+        url: https://github.com/666OS/rules/raw/release/mihomo/domain/Twitter.mrs
+        format: mrs
+        risk: "666OS/rules 限制条款，详见文件头说明"
+
+  github_dev:
+    description: "GitHub 及开发者常用服务"
+    fetch:
+      - name: metacubex_github
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs
+        format: mrs
+
+  netflix:
+    description: "Netflix"
+    fetch:
+      - name: metacubex_netflix
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.mrs
+        format: mrs
+
+  disney:
+    description: "Disney+"
+    fetch:
+      - name: metacubex_disney
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/disney.mrs
+        format: mrs
+
+  streaming_other:
+    description: "其他国际流媒体（HBO/Prime/Discovery/Paramount/DAZN等）"
+    fetch: []
+    extra_domains:
+      - hbomax.com
+      - max.com
+      - primevideo.com
+      - amazonvideo.com
+      - discoveryplus.com
+      - paramountplus.com
+      - dazn.com
+
+  news_media:
+    description: "国际新闻媒体"
+    fetch:
+      - name: 666os_newsmedia
+        url: https://github.com/666OS/rules/raw/release/mihomo/domain/NewsMedia.mrs
+        format: mrs
+        risk: "666OS/rules 限制条款，详见文件头说明"
+
+  crypto:
+    description: "货币/交易平台"
+    fetch:
+      - name: 666os_crypto
+        url: https://github.com/666OS/rules/raw/release/mihomo/domain/Crypto.mrs
+        format: mrs
+        risk: "666OS/rules 限制条款，详见文件头说明"
+
+  emby:
+    description: "Emby 私人媒体服务器"
+    fetch:
+      - name: 666os_emby_domain
+        url: https://github.com/666OS/rules/raw/release/mihomo/domain/Emby.mrs
+        format: mrs
+        risk: "666OS/rules 限制条款，详见文件头说明"
+      - name: 666os_emby_ip
+        url: https://github.com/666OS/rules/raw/release/mihomo/ip/Emby.mrs
+        format: mrs
+        risk: "666OS/rules 限制条款，详见文件头说明"
+
+  speedtest:
+    description: "网络测速工具，固定直连"
+    fetch:
+      - name: 666os_speedtest
+        url: https://github.com/666OS/rules/raw/release/mihomo/domain/Speedtest.mrs
+        format: mrs
+        risk: "666OS/rules 限制条款，详见文件头说明"
+
+  # -------------------- 游戏 --------------------
+  steam_cn:
+    description: "Steam 下载 CDN，国内可直连"
+    fetch:
+      - name: metacubex_steam_cn
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/steam@cn.mrs
+        format: mrs
+    extra_domains:
+      - steamstatic.com
+      - steamcontent.com
+      - steampipe.steamcontent.com
+      - steamchina.com
+      - steamserver.net
+
+  steam_global:
+    description: "Steam 商店/社区/好友，需代理"
+    fetch:
+      - name: metacubex_steam
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/steam.mrs
+        format: mrs
+    extra_domains:
+      - steamcommunity.com
+      - store.steampowered.com
+      - help.steampowered.com
+      - steam-chat.com
+
+  games_cn:
+    description: "国产/国内游戏，直连"
+    fetch:
+      - name: metacubex_games_cn
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-games@cn.mrs
+        format: mrs
+
+  games_global:
+    description: "其他国际游戏平台（Epic/战网/育碧/任天堂等）"
+    fetch:
+      - name: metacubex_games
+        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-games.mrs
+        format: mrs
+    extra_domains:
+      - epicgames.com
+      - unrealengine.com
+      - battle.net
+      - blizzard.com
+      - ea.com
+      - origin.com
+      - ubisoft.com
+      - uplay.com
+      - riotgames.com
+      - riotcdn.net
+      - playstation.com
+      - playstation.net
+      - xboxlive.com
+      - nintendo.net
+      - nintendo.com
+
+  # -------------------- 手写国内硬编码（防止误判，前置最高优先级） --------------------
+  cn_handwritten:
+    description: "手写国内域名硬编码，应对常被误判的大站点"
+    fetch: []
+    extra_domains:
+      - iqiyi.com
+      - youku.com
+      - qq.com
+      - gtimg.com
+      - alicdn.com
+      - taobao.com
+      - tmall.com
+      - jd.com
+      - baidu.com
+      - bdstatic.com
+      - 163.com
+      - 126.net
