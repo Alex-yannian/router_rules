@@ -1,5 +1,0 @@
-steamchina.com
-steamcontent.com
-steampipe.steamcontent.com
-steamserver.net
-steamstatic.com

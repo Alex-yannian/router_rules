@@ -186,12 +186,44 @@ def build_category(name, conf):
     return True
 
 
+def cleanup_stale_files(categories):
+    """清理 dist/ 里不再对应 sources.yaml 任何分类的孤儿文件。
+    判断方式：扫描 dist/ 下所有文件，按文件名前缀匹配分类名，
+    如果某个文件名对应的分类已经不在当前 sources.yaml 里，就删除它。
+    _build_report.json 和 .gitkeep 永远保留，不参与清理判断。"""
+    keep_names = {"_build_report.json", ".gitkeep"}
+    valid_category_names = set(categories.keys())
+    removed = []
+    for f in DIST_DIR.iterdir():
+        if not f.is_file() or f.name in keep_names:
+            continue
+        # 文件名格式是 <分类>__<源名>.mrs 或 <分类>_manual.txt/.mrs
+        # 取第一个 "__" 或 "_manual" 之前的部分作为分类名
+        stem = f.name
+        if "__" in stem:
+            cat = stem.split("__", 1)[0]
+        elif "_manual" in stem:
+            cat = stem.split("_manual", 1)[0]
+        else:
+            cat = None
+        if cat is not None and cat not in valid_category_names:
+            f.unlink()
+            removed.append(f.name)
+    if removed:
+        log(f"清理了 {len(removed)} 个不再对应任何分类的孤儿文件: {removed}")
+    return removed
+
+
 def main():
     DIST_DIR.mkdir(exist_ok=True)
     with open(SOURCES_FILE, encoding="utf-8") as f:
         sources = yaml.safe_load(f)
 
     categories = sources.get("categories", {})
+
+    removed = cleanup_stale_files(categories)
+    build_report["removed_stale"] = removed
+
     any_success = False
     for name, conf in categories.items():
         try:

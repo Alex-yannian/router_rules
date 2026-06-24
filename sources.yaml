@@ -316,3 +316,15 @@ categories:
       - bdstatic.com
       - 163.com
       - 126.net
+
+  # -------------------- 抖音/快手/小红书"非大陆IP"定位 --------------------
+  # 注意：这是利用APP定位识别机制，让这几个应用认为设备在境外，
+  # 默认情况下路由器侧的对应策略组指向"直接连接"（不生效），
+  # 需要用户在面板里手动把该策略组切换到具体海外节点才会触发效果。
+  locationdks:
+    description: "抖音/快手/小红书定位伪装（默认不生效，需手动切换策略组）"
+    fetch:
+      - name: 666os_locationdks
+        url: https://github.com/666OS/rules/raw/release/mihomo/domain/LocationDKS.mrs
+        format: mrs
+        risk: "666OS/rules 限制条款，详见文件头说明"
